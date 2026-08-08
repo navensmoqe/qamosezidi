@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Noto+Sans+Yazidi:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --font-cairo: 'Cairo', system-ui, -apple-system, sans-serif;
+  --font-yazidi: 'Noto Sans Yazidi', 'Segoe UI Historic', 'Cairo', sans-serif;
+}
+
+body {
+  font-family: var(--font-cairo);
+  background-color: #f8fafc;
+  color: #0f172a;
+  direction: rtl;
+  min-height: 100vh;
+}
+
+.dark body {
+  background-color: #0b0f19;
+  color: #f8fafc;
+}
+
+.font-yazidi {
+  font-family: var(--font-yazidi);
+}
+
+/* Custom Yazidi Unicode Glyph Support Fallbacks */
+@font-face {
+  font-family: 'YazidiUnicode';
+  src: local('Noto Sans Yazidi'), local('Yezidi'), local('Segoe UI Historic');
+  unicode-range: U+10E80-10EBF;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
