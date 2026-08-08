@@ -82,12 +82,27 @@ export default function AdminPage() {
   };
 
   const handleDeleteWord = async (id: string) => {
-    const res = await fetch(`/api/dictionary/${id}`, {
-      method: 'DELETE',
-    });
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-    await loadData();
+    // Optimistically remove from state immediately
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+    setTotalRecords((prev) => Math.max(0, prev - 1));
+    setStats((prev) => ({
+      ...prev,
+      totalWords: Math.max(0, prev.totalWords - 1),
+      arabicCount: Math.max(0, prev.arabicCount - 1),
+      yazidiCount: Math.max(0, prev.yazidiCount - 1),
+    }));
+
+    try {
+      const res = await fetch(`/api/dictionary/${id}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+    } catch (err) {
+      console.error('Error deleting word:', err);
+    } finally {
+      await loadData();
+    }
   };
 
   return (

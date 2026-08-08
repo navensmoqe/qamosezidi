@@ -38,43 +38,54 @@ const INITIAL_DATA: Omit<DictionaryEntry, 'id' | 'createdAt' | 'updatedAt'>[] = 
   { arabicWord: 'السلام والخير', yazidiWord: '𐺑𐺦𐺍 - خێر و سَلامي' },
 ];
 
-// Fallback in-memory and /tmp persistent storage for Serverless environments (Netlify / Vercel)
 const TMP_FILE = path.join('/tmp', 'qamos_entries.json');
+let memoryStore: DictionaryEntry[] | null = null;
+let isInitialized = false;
 
-function getFallbackStore(): DictionaryEntry[] {
+function getStore(): DictionaryEntry[] {
+  if (memoryStore !== null) {
+    return memoryStore;
+  }
+
   try {
     if (fs.existsSync(TMP_FILE)) {
       const data = fs.readFileSync(TMP_FILE, 'utf-8');
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        memoryStore = parsed;
+        isInitialized = true;
+        return memoryStore;
+      }
     }
   } catch (e) {
     // Ignore read errors
   }
 
-  // Initialize with default
-  const defaultEntries: DictionaryEntry[] = INITIAL_DATA.map((item, index) => ({
-    id: `default-${index + 1}`,
-    arabicWord: item.arabicWord,
-    yazidiWord: item.yazidiWord,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }));
-
-  try {
-    fs.writeFileSync(TMP_FILE, JSON.stringify(defaultEntries, null, 2), 'utf-8');
-  } catch (e) {
-    // Ignore write errors
+  // Only initialize default data on the very first cold startup
+  if (!isInitialized) {
+    memoryStore = INITIAL_DATA.map((item, index) => ({
+      id: `default-${index + 1}`,
+      arabicWord: item.arabicWord,
+      yazidiWord: item.yazidiWord,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    isInitialized = true;
+    saveStore(memoryStore);
+    return memoryStore;
   }
 
-  return defaultEntries;
+  memoryStore = [];
+  return memoryStore;
 }
 
-function saveFallbackStore(entries: DictionaryEntry[]) {
+function saveStore(entries: DictionaryEntry[]) {
+  memoryStore = entries;
+  isInitialized = true;
   try {
     fs.writeFileSync(TMP_FILE, JSON.stringify(entries, null, 2), 'utf-8');
   } catch (e) {
-    // Ignore write errors
+    // Ignore write errors in restricted serverless
   }
 }
 
@@ -134,11 +145,11 @@ export async function getDictionaryEntries(
       };
     }
   } catch (e) {
-    console.warn('Prisma DB query failed, falling back to Serverless store:', e);
+    // Database fallback
   }
 
   // Fallback Store logic
-  let all = getFallbackStore();
+  let all = getStore();
 
   if (query) {
     const qLower = query.toLowerCase();
@@ -155,7 +166,7 @@ export async function getDictionaryEntries(
   const total = all.length;
   const skip = (page - 1) * limit;
   const paged = all.slice(skip, skip + limit);
-  const yazidiScriptCount = getFallbackStore().filter((e) => containsYazidiScript(e.yazidiWord)).length;
+  const yazidiScriptCount = getStore().filter((e) => containsYazidiScript(e.yazidiWord)).length;
 
   return {
     entries: paged,
@@ -163,9 +174,9 @@ export async function getDictionaryEntries(
     page,
     totalPages: Math.ceil(total / limit) || 1,
     stats: {
-      totalWords: getFallbackStore().length,
-      arabicCount: getFallbackStore().length,
-      yazidiCount: getFallbackStore().length,
+      totalWords: getStore().length,
+      arabicCount: getStore().length,
+      yazidiCount: getStore().length,
       yazidiScriptCount,
     },
   };
@@ -183,13 +194,12 @@ export async function bulkImportEntries(newItems: { arabicWord: string; yazidiWo
     prismaSuccess = true;
     count = res.count;
   } catch (e) {
-    console.warn('Prisma bulk insert failed, using Serverless fallback store:', e);
+    // Ignore fallback
   }
 
-  // Always update fallback store too for redundancy
-  const current = getFallbackStore();
+  const current = getStore();
   const createdFallback: DictionaryEntry[] = newItems.map((item, idx) => ({
-    id: `import-${Date.now()}-${idx}`,
+    id: `import-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
     arabicWord: item.arabicWord,
     yazidiWord: item.yazidiWord,
     createdAt: new Date().toISOString(),
@@ -197,7 +207,7 @@ export async function bulkImportEntries(newItems: { arabicWord: string; yazidiWo
   }));
 
   const updated = [...createdFallback, ...current];
-  saveFallbackStore(updated);
+  saveStore(updated);
 
   return { count: prismaSuccess ? count : newItems.length };
 }
@@ -210,19 +220,19 @@ export async function createSingleEntry(arabicWord: string, yazidiWord: string) 
       data: { arabicWord, yazidiWord },
     });
   } catch (e) {
-    console.warn('Prisma create failed, using fallback:', e);
+    // Ignore fallback
   }
 
-  const current = getFallbackStore();
+  const current = getStore();
   const newEntry: DictionaryEntry = {
-    id: created ? created.id : `entry-${Date.now()}`,
+    id: created ? created.id : `entry-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     arabicWord,
     yazidiWord,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  saveFallbackStore([newEntry, ...current]);
+  saveStore([newEntry, ...current]);
   return newEntry;
 }
 
@@ -234,16 +244,16 @@ export async function updateSingleEntry(id: string, arabicWord: string, yazidiWo
       data: { arabicWord, yazidiWord },
     });
   } catch (e) {
-    console.warn('Prisma update failed:', e);
+    // Ignore fallback
   }
 
-  const current = getFallbackStore();
+  const current = getStore();
   const updated = current.map((item) =>
     item.id === id
       ? { ...item, arabicWord, yazidiWord, updatedAt: new Date().toISOString() }
       : item
   );
-  saveFallbackStore(updated);
+  saveStore(updated);
   return { id, arabicWord, yazidiWord };
 }
 
@@ -254,12 +264,12 @@ export async function deleteSingleEntry(id: string) {
       where: { id },
     });
   } catch (e) {
-    console.warn('Prisma delete failed:', e);
+    // Ignore fallback
   }
 
-  const current = getFallbackStore();
+  const current = getStore();
   const updated = current.filter((item) => item.id !== id);
-  saveFallbackStore(updated);
+  saveStore(updated);
   return true;
 }
 
@@ -272,13 +282,13 @@ export async function bulkDeleteEntries(ids: string[]) {
       where: { id: { in: ids } },
     });
   } catch (e) {
-    console.warn('Prisma bulk delete failed:', e);
+    // Ignore fallback
   }
 
   const idSet = new Set(ids);
-  const current = getFallbackStore();
+  const current = getStore();
   const updated = current.filter((item) => !idSet.has(item.id));
-  saveFallbackStore(updated);
+  saveStore(updated);
   return ids.length;
 }
 
@@ -287,9 +297,9 @@ export async function clearAllEntries() {
   try {
     await prisma.dictionaryEntry.deleteMany({});
   } catch (e) {
-    console.warn('Prisma clear all failed:', e);
+    // Ignore fallback
   }
 
-  saveFallbackStore([]);
+  saveStore([]);
   return true;
 }
