@@ -98,9 +98,7 @@ export default function WordCard({ entry, searchQuery }: WordCardProps) {
       </div>
 
       {/* Footer Copy Actions */}
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700/50 text-xs">
-        <span className="text-slate-400">ID: #{entry.id.substring(0, 8)}</span>
-
+      <div className="flex items-center justify-end pt-3 border-t border-slate-100 dark:border-slate-700/50 text-xs">
         <button
           onClick={() => handleCopy(`${entry.arabicWord} - ${entry.yazidiWord}`, 'both')}
           type="button"
