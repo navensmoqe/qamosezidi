@@ -37,3 +37,25 @@ export interface ImportSummary {
   skippedCount: number;
   errors: string[];
 }
+
+export interface PageItem {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  isPublished: boolean;
+  showInNav: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SiteSettings {
+  siteTitle: string;
+  siteSubtitle: string;
+  heroBadge: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  footerText: string;
+  contactEmail: string;
+}

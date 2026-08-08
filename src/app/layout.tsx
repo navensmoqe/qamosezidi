@@ -31,7 +31,11 @@ export default function RootLayout({
               <span>قاموس الأيزيدية - العربية الرقمي</span>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              <Link href="/about" className="hover:text-amber-500 transition-colors">عن القاموس</Link>
+              <Link href="/alphabet" className="hover:text-amber-500 transition-colors">الأبجدية الأيزيدية</Link>
+              <Link href="/guide" className="hover:text-amber-500 transition-colors">دليل الاستخدام</Link>
+              <span className="text-slate-400">|</span>
               <p>جميع الحقوق محفوظة © {new Date().getFullYear()}</p>
             </div>
           </div>

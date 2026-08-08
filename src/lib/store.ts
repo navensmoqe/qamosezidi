@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { prisma } from './prisma';
-import { DictionaryEntry, SearchMode } from './types';
+import { DictionaryEntry, SearchMode, PageItem, SiteSettings } from './types';
 import { containsYazidiScript } from './csvHelper';
 
-// Default initial dataset
+// Default initial dictionary entries
 const INITIAL_DATA: Omit<DictionaryEntry, 'id' | 'createdAt' | 'updatedAt'>[] = [
   { arabicWord: 'الرأس', yazidiWord: '𐺑𐺦𐺍𐺨 - سَرِ' },
   { arabicWord: 'الله / الإله', yazidiWord: '𐺝𐺡𐺍𐺀 - خُدا' },
@@ -38,9 +38,99 @@ const INITIAL_DATA: Omit<DictionaryEntry, 'id' | 'createdAt' | 'updatedAt'>[] = 
   { arabicWord: 'السلام والخير', yazidiWord: '𐺑𐺦𐺍 - خێر و سَلامي' },
 ];
 
+// Initial default custom pages
+const INITIAL_PAGES: PageItem[] = [
+  {
+    id: 'page-about',
+    title: 'عن القاموس الأيزيدي',
+    slug: 'about',
+    content: `## مرحباً بكم في قاموس الأيزيدية الرقمي
+يُعد هذا القاموس منصة رائدة تهدف إلى توثيق وحفظ وإتاحة المفردات والكلمات الأيزيدية وترجمتها الدقيقة إلى اللغة العربية.
+
+### 🎯 أهداف المشروع:
+1. **حفظ التراث اللغوي الأيزيدي:** توثيق الكلمات بالخط الأيزيدي الأصلي (Yezidi Script UTF-8) إلى جانب التمثيل الصوتي.
+2. **محرك بحث فوري وسلس:** تمكين الباحثين والمهتمين من البحث اللحظي باللغتين العربية والأيزيدية.
+3. **أداة استيراد وتصدير مفتوحة:** دعم ملفات CSV ثنائية الأعمدة لتسهيل تبادل المعاجم وتوسيع قاعدة البيانات.
+
+نرحب بجميع المساهمات اللغوية والأكاديمية لتطوير هذا المعجم القيم.`,
+    isPublished: true,
+    showInNav: true,
+    order: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'page-alphabet',
+    title: 'الأبجدية والخط الأيزيدي',
+    slug: 'alphabet',
+    content: `## الأبجدية الأيزيدية الأصيلة (𐺀𐺐𐺦𐺝)
+تتميز اللغة والتراث الأيزيدي بخط تاريخي فريد تم اعتماده رسمياً في معيار يونيكود العالمي (Unicode Yezidi Block U+10E80..U+10EBF).
+
+### 🔤 جدول أهم الحروف الأيزيدية ونطقها:
+- **𐺀 (ئـ / A):** الألف والهمزة الأولية.
+- **𐺁 (B):** حرف الباء.
+- **𐺢 (D):** حرف الدال.
+- **𐺑 (R):** حرف الراء.
+- **𐺦 (E / Ê):** حرف الياء الممالة / الكسرة الطويلة.
+- **𐺍 (L):** حرف اللام.
+- **𐺨 (I / Î):** حرف الياء الخفيفة.
+- **𐺝 (X / Kh):** حرف الخاء.
+- **𐺡 (J / Zh):** حرف الژاي أو الجيم.
+- **𐺪 (V / W):** حرف الفاء المثلثة (ڤ).
+
+يمكنك استخدام لوحة المفاتيح المدمجة في الصفحة الرئيسية للبحث بأي من هذه الحروف مباشرة!`,
+    isPublished: true,
+    showInNav: true,
+    order: 2,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'page-guide',
+    title: 'دليل الاستخدام واستيراد CSV',
+    slug: 'guide',
+    content: `## دليل إدارة وتصدير القاموس
+تم تصميم هذا النظام ليتعامل بسلاسة فائقة مع ملفات البيانات ثنائية الأعمدة (2-Column Architecture).
+
+### 📋 كيفية إعداد ملف CSV للاستيراد:
+1. أنشئ جدولاً في برنامج Excel أو Google Sheets يتكون من **عمودين فقط**:
+   - **العمود 1:** الكلمة العربية (مثال: "الرأس")
+   - **العمود 2:** التمثيل الأيزيدي (مثال: "𐺑𐺦𐺍𐺨 - سَرِ")
+2. احفظ الملف بصيغة **CSV UTF-8 (Comma delimited) (.csv)**.
+3. ادخل إلى لوحة الإدارة واسحب الملف في منطقة الاستيراد الذكية.
+4. افحص المعاينة واضغط على **"تأكيد وحفظ الكلمات بالحاعدة"**.
+
+### 📥 تصدير البيانات:
+يمكنك في أي وقت تصدير كامل قاعدة البيانات أو نتائج البحث المصفاة بنقرة واحدة عبر زر **تصدير CSV**.`,
+    isPublished: true,
+    showInNav: true,
+    order: 3,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+// Initial default site settings
+const INITIAL_SETTINGS: SiteSettings = {
+  siteTitle: 'قاموس الأيزيدية',
+  siteSubtitle: 'المنصة الرقمية لمعجم الكلمات والمفردات الأيزيدية-العربية',
+  heroBadge: 'محرك بحث ثنائي اللغة فوري (عربي - 𐺑𐺦𐺍𐺨)',
+  heroTitle: 'ابحث في القاموس الأيزيدي بكل سهولة',
+  heroSubtitle: 'استكشف آلاف المفردات بالأبجدية الأيزيدية الأصلية والترجمة العربية الدقيقة.',
+  footerText: 'قاموس الأيزيدية - العربية الرقمي • منصة التوثيق والمعجم المفتوح',
+  contactEmail: 'contact@ezidi-dictionary.org',
+};
+
 const TMP_FILE = path.join('/tmp', 'qamos_entries.json');
+const TMP_PAGES_FILE = path.join('/tmp', 'qamos_pages.json');
+const TMP_SETTINGS_FILE = path.join('/tmp', 'qamos_settings.json');
+
 let memoryStore: DictionaryEntry[] | null = null;
+let pagesStore: PageItem[] | null = null;
+let settingsStore: SiteSettings | null = null;
 let isInitialized = false;
+
+// ==================== DICTIONARY STORE ====================
 
 function getStore(): DictionaryEntry[] {
   if (memoryStore !== null) {
@@ -61,7 +151,6 @@ function getStore(): DictionaryEntry[] {
     // Ignore read errors
   }
 
-  // Only initialize default data on the very first cold startup
   if (!isInitialized) {
     memoryStore = INITIAL_DATA.map((item, index) => ({
       id: `default-${index + 1}`,
@@ -85,11 +174,10 @@ function saveStore(entries: DictionaryEntry[]) {
   try {
     fs.writeFileSync(TMP_FILE, JSON.stringify(entries, null, 2), 'utf-8');
   } catch (e) {
-    // Ignore write errors in restricted serverless
+    // Ignore
   }
 }
 
-// Universal get entries with query, mode, pagination
 export async function getDictionaryEntries(
   query = '',
   mode: SearchMode = 'all',
@@ -145,10 +233,9 @@ export async function getDictionaryEntries(
       };
     }
   } catch (e) {
-    // Database fallback
+    // Fallback
   }
 
-  // Fallback Store logic
   let all = getStore();
 
   if (query) {
@@ -182,7 +269,6 @@ export async function getDictionaryEntries(
   };
 }
 
-// Bulk import
 export async function bulkImportEntries(newItems: { arabicWord: string; yazidiWord: string }[]) {
   let prismaSuccess = false;
   let count = 0;
@@ -194,7 +280,7 @@ export async function bulkImportEntries(newItems: { arabicWord: string; yazidiWo
     prismaSuccess = true;
     count = res.count;
   } catch (e) {
-    // Ignore fallback
+    // Ignore
   }
 
   const current = getStore();
@@ -212,7 +298,6 @@ export async function bulkImportEntries(newItems: { arabicWord: string; yazidiWo
   return { count: prismaSuccess ? count : newItems.length };
 }
 
-// Create single entry
 export async function createSingleEntry(arabicWord: string, yazidiWord: string) {
   let created: any = null;
   try {
@@ -220,7 +305,7 @@ export async function createSingleEntry(arabicWord: string, yazidiWord: string) 
       data: { arabicWord, yazidiWord },
     });
   } catch (e) {
-    // Ignore fallback
+    // Ignore
   }
 
   const current = getStore();
@@ -236,7 +321,6 @@ export async function createSingleEntry(arabicWord: string, yazidiWord: string) 
   return newEntry;
 }
 
-// Update single entry
 export async function updateSingleEntry(id: string, arabicWord: string, yazidiWord: string) {
   try {
     await prisma.dictionaryEntry.update({
@@ -244,7 +328,7 @@ export async function updateSingleEntry(id: string, arabicWord: string, yazidiWo
       data: { arabicWord, yazidiWord },
     });
   } catch (e) {
-    // Ignore fallback
+    // Ignore
   }
 
   const current = getStore();
@@ -257,14 +341,13 @@ export async function updateSingleEntry(id: string, arabicWord: string, yazidiWo
   return { id, arabicWord, yazidiWord };
 }
 
-// Delete single entry
 export async function deleteSingleEntry(id: string) {
   try {
     await prisma.dictionaryEntry.delete({
       where: { id },
     });
   } catch (e) {
-    // Ignore fallback
+    // Ignore
   }
 
   const current = getStore();
@@ -273,7 +356,6 @@ export async function deleteSingleEntry(id: string) {
   return true;
 }
 
-// Bulk delete multiple entries by ID
 export async function bulkDeleteEntries(ids: string[]) {
   if (!Array.isArray(ids) || ids.length === 0) return 0;
   
@@ -282,7 +364,7 @@ export async function bulkDeleteEntries(ids: string[]) {
       where: { id: { in: ids } },
     });
   } catch (e) {
-    // Ignore fallback
+    // Ignore
   }
 
   const idSet = new Set(ids);
@@ -292,14 +374,162 @@ export async function bulkDeleteEntries(ids: string[]) {
   return ids.length;
 }
 
-// Clear all entries
 export async function clearAllEntries() {
   try {
     await prisma.dictionaryEntry.deleteMany({});
   } catch (e) {
-    // Ignore fallback
+    // Ignore
   }
 
   saveStore([]);
   return true;
+}
+
+// ==================== PAGES CMS STORE ====================
+
+function getPagesStore(): PageItem[] {
+  if (pagesStore !== null) {
+    return pagesStore;
+  }
+
+  try {
+    if (fs.existsSync(TMP_PAGES_FILE)) {
+      const data = fs.readFileSync(TMP_PAGES_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        pagesStore = parsed;
+        return pagesStore;
+      }
+    }
+  } catch (e) {
+    // Ignore read errors
+  }
+
+  pagesStore = [...INITIAL_PAGES];
+  savePagesStore(pagesStore);
+  return pagesStore;
+}
+
+function savePagesStore(pages: PageItem[]) {
+  pagesStore = pages;
+  try {
+    fs.writeFileSync(TMP_PAGES_FILE, JSON.stringify(pages, null, 2), 'utf-8');
+  } catch (e) {
+    // Ignore
+  }
+}
+
+export async function getAllPages(onlyPublished = false): Promise<PageItem[]> {
+  const pages = getPagesStore();
+  const sorted = [...pages].sort((a, b) => a.order - b.order);
+  if (onlyPublished) {
+    return sorted.filter((p) => p.isPublished);
+  }
+  return sorted;
+}
+
+export async function getPageBySlug(slug: string): Promise<PageItem | null> {
+  const pages = getPagesStore();
+  return pages.find((p) => p.slug.toLowerCase() === slug.toLowerCase() && p.isPublished) || null;
+}
+
+export async function createPage(data: Omit<PageItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<PageItem> {
+  const current = getPagesStore();
+  const slug = (data.slug || data.title.trim().toLowerCase().replace(/\s+/g, '-')).replace(/[^a-zA-Z0-9-_\u0600-\u06FF]/g, '');
+
+  const newPage: PageItem = {
+    id: `page-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    title: data.title.trim(),
+    slug,
+    content: data.content || '',
+    isPublished: data.isPublished ?? true,
+    showInNav: data.showInNav ?? true,
+    order: data.order ?? current.length + 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updated = [...current, newPage];
+  savePagesStore(updated);
+  return newPage;
+}
+
+export async function updatePage(id: string, data: Partial<PageItem>): Promise<PageItem | null> {
+  const current = getPagesStore();
+  let updatedPage: PageItem | null = null;
+
+  const updated = current.map((p) => {
+    if (p.id === id) {
+      updatedPage = {
+        ...p,
+        ...data,
+        updatedAt: new Date().toISOString(),
+      };
+      return updatedPage;
+    }
+    return p;
+  });
+
+  if (updatedPage) {
+    savePagesStore(updated);
+  }
+
+  return updatedPage;
+}
+
+export async function deletePage(id: string): Promise<boolean> {
+  const current = getPagesStore();
+  const updated = current.filter((p) => p.id !== id);
+  savePagesStore(updated);
+  return true;
+}
+
+// ==================== SITE SETTINGS STORE ====================
+
+function getSettingsStore(): SiteSettings {
+  if (settingsStore !== null) {
+    return settingsStore;
+  }
+
+  try {
+    if (fs.existsSync(TMP_SETTINGS_FILE)) {
+      const data = fs.readFileSync(TMP_SETTINGS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed === 'object') {
+        const merged: SiteSettings = { ...INITIAL_SETTINGS, ...parsed };
+        settingsStore = merged;
+        return merged;
+      }
+    }
+  } catch (e) {
+    // Ignore read errors
+  }
+
+  const initial: SiteSettings = { ...INITIAL_SETTINGS };
+  settingsStore = initial;
+  saveSettingsStore(initial);
+  return initial;
+}
+
+function saveSettingsStore(settings: SiteSettings) {
+  settingsStore = settings;
+  try {
+    fs.writeFileSync(TMP_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
+  } catch (e) {
+    // Ignore
+  }
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  return getSettingsStore();
+}
+
+export async function updateSiteSettings(data: Partial<SiteSettings>): Promise<SiteSettings> {
+  const current = getSettingsStore();
+  const updated: SiteSettings = {
+    ...current,
+    ...data,
+  };
+  saveSettingsStore(updated);
+  return updated;
 }
