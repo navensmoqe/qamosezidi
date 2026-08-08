@@ -80,7 +80,7 @@ export default function WordCard({ entry, searchQuery }: WordCardProps) {
         {/* Column 2: Yazidi Word / Script */}
         <div className="p-3.5 rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1">
-            <span>التمثيل الأيزيدي (Yazidi)</span>
+            <span>التمثيل الأيزيدي (Ezidi)</span>
             <button
               onClick={() => handleCopy(entry.yazidiWord, 'yazidi')}
               className="text-amber-500 hover:text-amber-600 transition-colors"

@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { Lock } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'قاموس الأيزيدية - العربية | Yazidi-Arabic Dictionary',
+  title: 'قاموس الأيزيدية - العربية | Ezidi-Arabic Dictionary',
   description: 'منصة رقمية حديثة لمعجم المفردات ثنائية العمود باللغتين الأيزيدية والعربية بالخطين الأصلي والصوتي.',
-  keywords: ['قاموس أيزيدي', 'اللغة الأيزيدية', 'الخط الأيزيدي', 'Yazidi Script', 'Yazidi Dictionary', 'عربي أيزيدي'],
+  keywords: ['قاموس أيزيدي', 'اللغة الأيزيدية', 'الخط الأيزيدي', 'Ezidi Script', 'Ezidi Dictionary', 'عربي أيزيدي'],
 };
 
 export default function RootLayout({

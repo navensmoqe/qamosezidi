@@ -22,7 +22,7 @@ export default function CsvExporter({ searchQuery, searchMode, totalRecords }: C
     // Trigger download via anchor element
     const a = document.createElement('a');
     a.href = url;
-    a.download = `yazidi_arabic_dictionary_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `ezidi_arabic_dictionary_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

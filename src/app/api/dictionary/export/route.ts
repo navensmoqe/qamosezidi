@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="yazidi_arabic_dictionary_${new Date().toISOString().slice(0, 10)}.csv"`,
+        'Content-Disposition': `attachment; filename="ezidi_arabic_dictionary_${new Date().toISOString().slice(0, 10)}.csv"`,
       },
     });
   } catch (error: any) {
