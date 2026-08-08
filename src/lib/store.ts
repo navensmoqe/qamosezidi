@@ -262,3 +262,34 @@ export async function deleteSingleEntry(id: string) {
   saveFallbackStore(updated);
   return true;
 }
+
+// Bulk delete multiple entries by ID
+export async function bulkDeleteEntries(ids: string[]) {
+  if (!Array.isArray(ids) || ids.length === 0) return 0;
+  
+  try {
+    await prisma.dictionaryEntry.deleteMany({
+      where: { id: { in: ids } },
+    });
+  } catch (e) {
+    console.warn('Prisma bulk delete failed:', e);
+  }
+
+  const idSet = new Set(ids);
+  const current = getFallbackStore();
+  const updated = current.filter((item) => !idSet.has(item.id));
+  saveFallbackStore(updated);
+  return ids.length;
+}
+
+// Clear all entries
+export async function clearAllEntries() {
+  try {
+    await prisma.dictionaryEntry.deleteMany({});
+  } catch (e) {
+    console.warn('Prisma clear all failed:', e);
+  }
+
+  saveFallbackStore([]);
+  return true;
+}
