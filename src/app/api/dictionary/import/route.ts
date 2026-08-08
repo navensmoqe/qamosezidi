@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { bulkImportEntries } from '@/lib/store';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,20 +28,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Perform bulk insertion in SQLite transaction
-    const createdCount = await prisma.dictionaryEntry.createMany({
-      data: validData,
-    });
+    const result = await bulkImportEntries(validData);
 
     return NextResponse.json({
       success: true,
-      importedCount: createdCount.count,
-      message: `تم استيراد ${createdCount.count} كلمة بنجاح`,
+      importedCount: result.count,
+      message: `تم استيراد ${result.count} كلمة بنجاح إلى القاموس`,
     });
   } catch (error: any) {
     console.error('Error importing CSV entries:', error);
     return NextResponse.json(
-      { success: false, error: 'حدث خطأ أثناء استيراد البيانات' },
+      { success: false, error: error?.message || 'حدث خطأ أثناء استيراد البيانات' },
       { status: 500 }
     );
   }

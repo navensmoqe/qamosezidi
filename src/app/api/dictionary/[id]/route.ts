@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { updateSingleEntry, deleteSingleEntry } from '@/lib/store';
 
 export async function PUT(
   request: NextRequest,
@@ -24,13 +24,7 @@ export async function PUT(
       );
     }
 
-    const updatedEntry = await prisma.dictionaryEntry.update({
-      where: { id },
-      data: {
-        arabicWord: arabicWord.trim(),
-        yazidiWord: yazidiWord.trim(),
-      },
-    });
+    const updatedEntry = await updateSingleEntry(id, arabicWord.trim(), yazidiWord.trim());
 
     return NextResponse.json({ success: true, entry: updatedEntry });
   } catch (error: any) {
@@ -48,11 +42,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-
-    await prisma.dictionaryEntry.delete({
-      where: { id },
-    });
-
+    await deleteSingleEntry(id);
     return NextResponse.json({ success: true, message: 'تم حذف الكلمة بنجاح' });
   } catch (error: any) {
     console.error('Error deleting entry:', error);
