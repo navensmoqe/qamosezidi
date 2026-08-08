@@ -6,7 +6,7 @@ import CsvImporter from '@/components/admin/CsvImporter';
 import WordManager from '@/components/admin/WordManager';
 import WordModal from '@/components/admin/WordModal';
 import { DictionaryEntry } from '@/lib/types';
-import { Shield, Sparkles, Database, BookOpen } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export default function AdminPage() {
   const [entries, setEntries] = useState<DictionaryEntry[]>([]);
@@ -21,9 +21,7 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingEntry, setEditingEntry] = useState<DictionaryEntry | null>(null);
-
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSeeding, setIsSeeding] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -47,16 +45,6 @@ export default function AdminPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const handleSeedData = async () => {
-    setIsSeeding(true);
-    try {
-      await fetch('/api/dictionary/seed', { method: 'POST' });
-      await loadData();
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   const handleSaveWord = async (data: { arabicWord: string; yazidiWord: string; id?: string }) => {
     if (data.id) {
@@ -127,7 +115,7 @@ export default function AdminPage() {
       </div>
 
       {/* Overview Stats */}
-      <AdminStats stats={stats} onSeedData={handleSeedData} isSeeding={isSeeding} />
+      <AdminStats stats={stats} />
 
       {/* Smart CSV Importer */}
       <CsvImporter onSuccess={loadData} />
