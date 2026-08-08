@@ -43,7 +43,7 @@ export default function HeroSearch({
           ابحث في <span className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 bg-clip-text text-transparent">القاموس الأيزيدي</span> بكل سهولة
         </h1>
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">
-          استكشف آلاف المفردات بالأبجدية الأيزيدية الأصلية (UTF-8 Script) والترجمة العربية الدقيقة.
+          استكشف آلاف المفردات بالأبجدية الأيزيدية الأصلية والترجمة العربية الدقيقة.
         </p>
 
         {/* Live Search Input Bar */}

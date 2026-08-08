@@ -47,7 +47,7 @@ export default function WordCard({ entry, searchQuery }: WordCardProps) {
         {hasNativeScript ? (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             <Sparkles className="w-3 h-3" />
-            خط أيزيدي أصلي (UTF-8)
+            خط أيزيدي أصلي
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
